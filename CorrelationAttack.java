@@ -20,7 +20,7 @@ public class CorrelationAttack {
         // as a 3 tuple
     }
 
-    public int hammingDistance ( final int[] x, final int[] y ) {
+    public static int hammingDistance ( final int[] x, final int[] y ) {
         int distance = 0;
         for ( int i = 0; i < x.length; i++ ) {
             if ( x[i] != y[i] ) {
@@ -30,22 +30,10 @@ public class CorrelationAttack {
         return distance;
     }
 
-    public static double calculateCorrelation ( final int[] guessedKeystream, final int[] actualKeystream ) {
-        if ( guessedKeystream.length != actualKeystream.length ) {
-            throw new IllegalArgumentException( "Keystreams must have the same length." );
-        }
-
-        final int N = guessedKeystream.length;
-        int hammingDistance = 0;
-
-        // Calculate Hamming distance between the two sequences
-        for ( int i = 0; i < N; i++ ) {
-            if ( guessedKeystream[i] != actualKeystream[i] ) {
-                hammingDistance++;
-            }
-        }
-
-        // Compute the correlation p*
+    // Function to estimate correlation p*
+    public static double calcCorrelation ( final int[] guessedOutput, final int[] keystream ) {
+        final int N = keystream.length;
+        final int hammingDistance = hammingDistance( guessedOutput, keystream );
         return 1.0 - (double) hammingDistance / N;
     }
 
