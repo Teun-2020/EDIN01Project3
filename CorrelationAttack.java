@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CorrelationAttack {
-    private int[] keystream;
-    private final int[]  lfsr1 = { 0, 1, 3, 5, 6, 9, 10, 12 };
+    private int[]       keystream;
+    private final int[] lfsr1 = { 0, 1, 3, 5, 6, 9, 10, 12 };
 
     public CorrelationAttack () {
         final String filePath = "unique_sequence.txt"; // Replace with the path
@@ -40,10 +40,9 @@ public class CorrelationAttack {
     // Function to estimate correlation p*
     public double calcCorrelation ( final int[] guessedOutput ) {
         final int N = keystream.length;
-        final int hammingDistance = hammingDistance(guessedOutput);
+        final int hammingDistance = hammingDistance( guessedOutput );
         return 1.0 - (double) hammingDistance / N;
     }
-
 
     /**
      * Helper method to convert the file contents to an array.
@@ -57,13 +56,15 @@ public class CorrelationAttack {
             array[i] = Character.getNumericValue( fileContent.charAt( i ) );
         }
 
-        int[] array2 = new int[fileContent.length() - 3]; //Hardcoded for now
+        final int[] array2 = new int[fileContent.length() - 3]; // Hardcoded for
+                                                                // now
         int amountSkipped = 0;
 
-        for(int i = 0; i < fileContent.length(); i++) {
-            if(array[i] == 0 || array[i] == 1){
+        for ( int i = 0; i < fileContent.length(); i++ ) {
+            if ( array[i] == 0 || array[i] == 1 ) {
                 array2[i - amountSkipped] = array[i];
-            } else {
+            }
+            else {
                 amountSkipped++;
             }
         }
@@ -117,7 +118,7 @@ public class CorrelationAttack {
         for ( final int[] possibleState : possibleStates ) {
             final int[] lfsr = calculateLFSR( possibleState, taps, length );
             final double pstar = calcCorrelation( lfsr );
-            if (pstar > maxPStar) {
+            if ( pstar > maxPStar ) {
                 maxPStar = pstar;
             }
         }
@@ -134,7 +135,7 @@ public class CorrelationAttack {
         for ( final int[] possibleState : possibleStates ) {
             final int[] lfsr = calculateLFSR( possibleState, taps, length );
             final double pstar = calcCorrelation( lfsr );
-            if (pstar > maxPStar) {
+            if ( pstar > maxPStar ) {
                 maxPStar = pstar;
                 maxInitialState = possibleState;
             }
@@ -166,7 +167,8 @@ public class CorrelationAttack {
             final int sum = lfsr1[i] + lfsr2[i] + lfsr3[i];
             if ( sum > 1 ) {
                 result[i] = 1;
-            } else {
+            }
+            else {
                 result[i] = 0;
             }
         }
@@ -174,15 +176,67 @@ public class CorrelationAttack {
         return result;
     }
 
-    public double calculateAccuracy(int[] generatedKeystream) {
+    public double calculateAccuracy ( final int[] generatedKeystream ) {
         int correctBits = 0;
 
-        for (int i = 0; i < keystream.length; i++) {
-            if (generatedKeystream[i] == keystream[i]) {
+        for ( int i = 0; i < keystream.length; i++ ) {
+            if ( generatedKeystream[i] == keystream[i] ) {
                 correctBits++;
             }
         }
 
         return (double) correctBits / keystream.length * 100;
+    }
+
+    public static List<Integer> closestHamming ( final List<Integer> LFSR, final List<Integer> keystream, final int N,
+            final double[] maxP ) {
+        List<Integer> key = new ArrayList<>( N );
+        int bestDistance = N; // Maximum possible distance
+        maxP[0] = 0.0; // Initialize correlation value
+
+        for ( int i = 1; i < ( 1 << LFSR.get( LFSR.size() - 1 ) ); ++i ) {
+            final List<Integer> test = decToBinary( i, LFSR.get( LFSR.size() - 1 ) );
+            int hammingDistance = 0;
+
+            // Generate the sequence using the LFSR
+            for ( int j = 0; j < N; ++j ) {
+                if ( j >= LFSR.get( LFSR.size() - 1 ) ) {
+                    int next = 0;
+                    for ( int k = 0; k < LFSR.size(); ++k ) {
+                        next ^= test.get( j - LFSR.get( k ) );
+                    }
+                    test.add( next );
+                }
+                // Calculate Hamming distance
+                if ( !test.get( j ).equals( keystream.get( j ) ) ) {
+                    ++hammingDistance;
+                }
+            }
+
+            // Calculate p*
+            final double correlation = 1.0 - (double) hammingDistance / N;
+
+            // Update the best key and correlation
+            if ( hammingDistance < bestDistance || i == 1 ) {
+                bestDistance = hammingDistance;
+                key = new ArrayList<>( test );
+                maxP[0] = correlation;
+            }
+        }
+        return key;
+    }
+
+    // Helper method to convert a decimal number to binary representation as a
+    // List of Integers
+    public static List<Integer> decToBinary ( final int n, final int size ) {
+        final List<Integer> binary = new ArrayList<>();
+        for ( int i = size - 1; i >= 0; --i ) {
+            binary.add( ( n >> i ) & 1 );
+        }
+        return binary;
+    }
+
+    public int[] getKeystream () {
+        return this.keystream;
     }
 }
