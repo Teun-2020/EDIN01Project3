@@ -47,7 +47,8 @@ public class Main {
                 result[i] = 0;
             }
         }
-
+        System.out.print( keystream );
+        System.out.println( attack.calculateAccuracy( result ) );
         System.out.println( Arrays.toString( result ) );
     }
 }
