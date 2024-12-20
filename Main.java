@@ -7,24 +7,6 @@ public class Main {
     public static void main ( final String[] args ) {
         final CorrelationAttack attack = new CorrelationAttack();
 
-        // // Testing LFSR1
-        // final double pStar1 = attack.getBestPstar( 13, new int[] { 1, 2, 4,
-        // 6, 7, 10, 11, 13 } );
-        // System.out.println( "Best p* for LFSR1: " + pStar1 );
-        //
-        // // Testing LFSR2
-        // final double pStar2 = attack.getBestPstar( 15, new int[] { 2, 4, 6,
-        // 7, 10, 11, 13, 15 } );
-        // System.out.println( "Best p* for LFSR2: " + pStar2 );
-        //
-        // // Testing LFSR3
-        // final double pStar3 = attack.getBestPstar( 17, new int[] { 2, 4, 5,
-        // 8, 10, 13, 16, 17 } );
-        // System.out.println( "Best p* for LFSR3: " + pStar3 );
-        //
-        // int[] attackResult = attack.getKeyStream();
-        // double accuracy = attack.calculateAccuracy(attackResult);
-
         final List<Integer> LFSR = List.of( 1, 2, 4, 6, 7, 10, 11, 13 );
         final List<Integer> keystream = new ArrayList<>();
         for ( final int i : attack.getKeystream() ) {
@@ -33,10 +15,30 @@ public class Main {
         final int N = keystream.size();
         final double[] maxP = new double[1];
 
-        final List<Integer> lfsr1 = attack.closestHamming( LFSR, keystream, N, maxP );
-        final List<Integer> lfsr2 = attack.closestHamming( List.of( 2, 4, 6, 7, 10, 11, 13, 15 ), keystream, N, maxP );
-        final List<Integer> lfsr3 = attack.closestHamming( List.of( 2, 4, 5, 8, 10, 13, 16, 17 ), keystream, N, maxP );
-
+        System.out.printf( "\nLSFR 1" );
+        final List<Integer> lfsr1 = attack.getBestState( LFSR, keystream, N );
+        System.out.printf( "\nInitialState: " );
+        for ( int i = 0; i < 13 - 1; i++ ) {
+            System.out.printf( "%d", lfsr1.get( i ) );
+        }
+        System.out.print( lfsr1.get( 12 ) );
+        System.out.printf( "\n" );
+        System.out.printf( "\nLSFR 2" );
+        final List<Integer> lfsr2 = attack.getBestState( List.of( 2, 4, 6, 7, 10, 11, 13, 15 ), keystream, N );
+        System.out.printf( "\nInitialState: " );
+        for ( int i = 0; i < 15 - 1; i++ ) {
+            System.out.printf( "%d", lfsr2.get( i ) );
+        }
+        System.out.print( lfsr2.get( 15 - 1 ) );
+        System.out.printf( "\n" );
+        System.out.printf( "\nLSFR 3" );
+        final List<Integer> lfsr3 = attack.getBestState( List.of( 2, 4, 5, 8, 10, 13, 16, 17 ), keystream, N );
+        System.out.printf( "\nInitialState: " );
+        for ( int i = 0; i < 17 - 1; i++ ) {
+            System.out.printf( "%d", lfsr3.get( i ) );
+        }
+        System.out.print( lfsr3.get( 17 - 1 ) );
+        System.out.printf( "\n" );
         final int[] result = new int[keystream.size()];
         for ( int i = 0; i < keystream.size(); i++ ) {
             final int sum = lfsr1.get( i ) + lfsr2.get( i ) + lfsr3.get( i );
@@ -47,8 +49,12 @@ public class Main {
                 result[i] = 0;
             }
         }
+        System.out.print( "\nInitial Keystream:\n" );
         System.out.print( keystream );
-        System.out.println( attack.calculateAccuracy( result ) );
+        System.out.print( "\nCalculated Keystream: \n" );
         System.out.println( Arrays.toString( result ) );
+        System.out.print( "Accuracy: \n" );
+        System.out.println( attack.calculateAccuracy( result ) );
+
     }
 }
