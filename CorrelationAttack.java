@@ -61,20 +61,20 @@ public class CorrelationAttack {
     // need method to calculate lsfr method given initial state
     //
 
-    public int[] calculateLFSR(int[] initialState, int[] taps, int length) {
-        int N = keystream.length; // Length of the sequence to generate
-        int[] output = new int[N];
-        int[] state = Arrays.copyOf(initialState, length);
+    public int[] calculateLFSR ( final int[] initialState, final int[] taps, final int length ) {
+        final int N = keystream.length; // Length of the sequence to generate
+        final int[] output = new int[N];
+        final int[] state = Arrays.copyOf( initialState, length );
 
-        for (int i = 0; i < N; i++) {
+        for ( int i = 0; i < N; i++ ) {
             output[i] = state[length - 1]; // Output the current state bit
 
             int nextBit = 0;
-            for (int tap : taps) {
+            for ( final int tap : taps ) {
                 nextBit ^= state[length - tap];
             }
 
-            System.arraycopy(state, 0, state, 1, length - 1);
+            System.arraycopy( state, 0, state, 1, length - 1 );
             state[0] = nextBit;
         }
         return output;
@@ -97,20 +97,71 @@ public class CorrelationAttack {
         return initialStates;
     }
 
-    public double getBestPstar(int length, int[] taps) {
+    public double getBestPstar ( final int length, final int[] taps ) {
         double maxPStar = 0.5;
         int[] maxInitialState = new int[length];
-        List<int[]> possibleStates = generateAllInitialStates(length);
+        final List<int[]> possibleStates = generateAllInitialStates( length );
 
-        for (int[] possibleState : possibleStates) {
-            int[] lfsr = calculateLFSR(possibleState, taps, length);
-            double pstar = calcCorrelation(lfsr);
-            if (Math.abs(0.5 - pstar) > Math.abs(0.5 - maxPStar)) {
+        for ( final int[] possibleState : possibleStates ) {
+            final int[] lfsr = calculateLFSR( possibleState, taps, length );
+            final double pstar = calcCorrelation( lfsr );
+            if ( Math.abs( 0.5 - pstar ) > Math.abs( 0.5 - maxPStar ) ) {
                 maxPStar = pstar;
                 maxInitialState = possibleState;
             }
         }
-        System.out.println("Best initial state: " + Arrays.toString(maxInitialState));
+        // System.out.println( "Best initial state: " + Arrays.toString(
+        // maxInitialState ) );
         return maxPStar;
+    }
+
+    public int[] getBestInitialState ( final int length, final int[] taps ) {
+        double maxPStar = 0.5;
+        int[] maxInitialState = new int[length];
+        final List<int[]> possibleStates = generateAllInitialStates( length );
+
+        for ( final int[] possibleState : possibleStates ) {
+            final int[] lfsr = calculateLFSR( possibleState, taps, length );
+            final double pstar = calcCorrelation( lfsr );
+            if ( Math.abs( 0.5 - pstar ) > Math.abs( 0.5 - maxPStar ) ) {
+                maxPStar = pstar;
+                maxInitialState = possibleState;
+            }
+        }
+        // System.out.println( "Best initial state: " + Arrays.toString(
+        // maxInitialState ) );
+        return maxInitialState;
+    }
+
+    public int[] getKeyStream () {
+        // Testing LFSR1
+        final int[] result = new int[keystream.length];
+        final int[] pStar1 = getBestInitialState( 13, new int[] { 1, 2, 4, 6, 7, 10, 11, 13 } );
+        // System.out.println( "Best p* for LFSR1: " + pStar1 );
+
+        // Testing LFSR2
+        final int[] pStar2 = getBestInitialState( 15, new int[] { 2, 4, 6, 7, 10, 11, 13, 15 } );
+        // System.out.println( "Best p* for LFSR2: " + pStar2 );
+
+        // Testing LFSR3
+        final int[] pStar3 = getBestInitialState( 17, new int[] { 2, 4, 5, 8, 10, 13, 16, 17 } );
+        // System.out.println( "Best p* for LFSR3: " + pStar3 );
+
+        final int[] lfsr1 = calculateLFSR( pStar1, new int[] { 1, 2, 4, 6, 7, 10, 11, 13 }, 13 );
+        final int[] lfsr2 = calculateLFSR( pStar2, new int[] { 2, 4, 6, 7, 10, 11, 13, 15 }, 15 );
+        final int[] lfsr3 = calculateLFSR( pStar3, new int[] { 2, 4, 5, 8, 10, 13, 16, 17 }, 17 );
+
+        for ( int i = 0; i < keystream.length; i++ ) {
+            final int sum = lfsr1[i] + lfsr2[i] + lfsr3[i];
+            if ( sum > 1 ) {
+                result[i] = 1;
+            }
+            else {
+                result[i] = 0;
+            }
+        }
+
+        return result;
+
     }
 }
