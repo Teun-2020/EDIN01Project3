@@ -117,26 +117,32 @@ public class CorrelationAttack {
         return initialStates;
     }
 
-    public double getBestPstar1 () {
-        double maxPStar = 0.0;
-        double minpstar = 1.0;
+    public int[] getBestPstar1 () {
+        double maxPStar = 0.5;
+
         int[] maxInitialState = new int[keystream.length];
+
         final List<int[]> possibleStates = generateAllInitialStates( 13 );
+
         for ( final int[] possibleState : possibleStates ) {
 
             final int[] lfsr = calculateLFSR1( possibleState );
+
             final double pstar = calcCorrelation( lfsr );
-            if ( pstar > maxPStar ) {
+
+            if ( Math.abs( 0.5 - pstar ) > Math.abs( 0.5 - maxPStar ) ) {
                 maxPStar = pstar;
-                maxInitialState = possibleState;
+                maxInitialState = Arrays.copyOf( possibleState, keystream.length );
+                //
+
             }
-            if ( pstar < minpstar ) {
-                minpstar = pstar;
-                // maxInitialState = possibleState;
-            }
+
+            //
+
         }
-        System.out.println( 0.5 - minpstar );
-        return maxPStar;
+        System.out.println( maxPStar );
+        return maxInitialState;
+
     }
 
 }
